@@ -1,0 +1,36 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Restaurant {
+  id          Int       @id @default(autoincrement())
+  name        String
+  address     String
+  phone       String?
+  capacity    Int       // capacidad total por turno
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  reservations Reservation[]
+}
+
+model Reservation {
+  id           Int       @id @default(autoincrement())
+  customerName String
+  customerEmail String
+  partySize    Int
+  date         DateTime  // fecha (incluye hora del turno)
+  status       String    @default("booked") // booked | cancelled
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  restaurantId Int
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([restaurantId, date])
+}

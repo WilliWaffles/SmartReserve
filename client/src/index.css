@@ -1,0 +1,65 @@
+/* client/src/index.css */
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+  background: linear-gradient(180deg, #0ea5e9 0%, #1e3a8a 100%);
+  color: #f8fafc;
+}
+
+.container {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.navbar {
+  display: flex; align-items: center; gap: 16px;
+  padding: 12px 0 20px 0; border-bottom: 1px solid rgba(255,255,255,.15);
+}
+
+.navbar a {
+  color: #e2e8f0; text-decoration: none; padding: 6px 10px; border-radius: 8px;
+}
+.navbar a.active, .navbar a:hover {
+  background: rgba(255,255,255,.12); color: #fff;
+}
+
+.card {
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+  backdrop-filter: blur(6px);
+  border-radius: 14px;
+  padding: 16px;
+  margin: 12px 0;
+}
+
+.btn {
+  background: #22c55e; color: #06203a; border: none;
+  padding: 10px 14px; border-radius: 10px; cursor: pointer; font-weight: 600;
+}
+.btn:disabled { opacity: .6; cursor: not-allowed; }
+
+.input, .select {
+  width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,.22);
+  background: rgba(255,255,255,.06); color: #fff;
+}
+
+::placeholder {
+  color: #000;
+  opacity: 0.8;
+}
+
+
+select, option {
+  background-color: #f8fafc;
+  color: #111827;
+}
+
+
+.grid {
+  display: grid; gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
