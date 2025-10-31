@@ -5,6 +5,8 @@ import morgan from "morgan";
 import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
 
+import { loginAdmin, requireAdmin } from "./adminAuth.js";
+
 const prisma = new PrismaClient();
 const app = express();
 
@@ -22,7 +24,24 @@ function dayWindow(dateLike) {
 
 /** Health y raíz */
 app.get("/health", (_req, res) => res.json({ ok: true }));
-app.get("/", (_req, res) => res.status(200).send("SmartReserve API is running"));
+app.get("/", (_req, res) =>
+  res.status(200).send("SmartReserve API is running")
+);
+
+/** -------- Admin Auth -------- */
+/**
+ * Recibe { "username": "...", "password": "..." }
+ * Si son válidos, devuelve { token: "<...>" }
+ * Este token se usará luego en Authorization: Bearer <token>
+ */
+app.post("/api/admin/login", (req, res) => {
+  const { username, password } = req.body || {};
+  const token = loginAdmin(username, password);
+  if (!token) {
+    return res.status(401).json({ error: "Credenciales inválidas" });
+  }
+  return res.json({ token });
+});
 
 /** Zod schemas */
 const restaurantSchema = z.object({
@@ -45,11 +64,17 @@ const reservationSchema = z.object({
 
 /** -------- Restaurants -------- */
 app.get("/api/restaurants", async (_req, res) => {
-  const list = await prisma.restaurant.findMany({ orderBy: { id: "desc" } });
+  const list = await prisma.restaurant.findMany({
+    orderBy: { id: "desc" },
+  });
   res.json(list);
 });
 
-app.post("/api/restaurants", async (req, res) => {
+/**
+ * Crear restaurante (ruta protegida - solo admin).
+ * Requiere header Authorization: Bearer <token_valido_admin>
+ */
+app.post("/api/restaurants", requireAdmin, async (req, res) => {
   try {
     const data = restaurantSchema.parse(req.body);
     const r = await prisma.restaurant.create({ data });
@@ -60,6 +85,7 @@ app.post("/api/restaurants", async (req, res) => {
 });
 
 /** -------- Availability por DÍA -------- */
+// Ej: GET /api/restaurants/1/availability?date=2025-10-20
 app.get("/api/restaurants/:id/availability", async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -81,6 +107,7 @@ app.get("/api/restaurants/:id/availability", async (req, res) => {
 
     const reserved = agg._sum.partySize ?? 0;
     const available = Math.max(0, r.capacity - reserved);
+
     res.json({
       capacity: r.capacity,
       reserved,
@@ -105,12 +132,16 @@ app.post("/api/reservations", async (req, res) => {
   try {
     const data = reservationSchema.parse(req.body);
 
-    const r = await prisma.restaurant.findUnique({ where: { id: data.restaurantId } });
-    if (!r) return res.status(404).json({ error: "restaurant not found" });
+    const r = await prisma.restaurant.findUnique({
+      where: { id: data.restaurantId }
+    });
+    if (!r)
+      return res.status(404).json({ error: "restaurant not found" });
 
     // Disponibilidad por DÍA
     const win = dayWindow(data.date);
-    if (!win) return res.status(400).json({ error: "invalid date" });
+    if (!win)
+      return res.status(400).json({ error: "invalid date" });
 
     const agg = await prisma.reservation.aggregate({
       _sum: { partySize: true },
@@ -121,8 +152,11 @@ app.post("/api/reservations", async (req, res) => {
       }
     });
     const reserved = agg._sum.partySize ?? 0;
+
     if (reserved + data.partySize > r.capacity) {
-      return res.status(409).json({ error: "No hay disponibilidad para tantas personas." });
+      return res.status(409).json({
+        error: "No hay disponibilidad para tantas personas."
+      });
     }
 
     // fecha normalizada al inicio del día
@@ -142,7 +176,11 @@ app.post("/api/reservations", async (req, res) => {
   }
 });
 
-app.put("/api/reservations/:id/cancel", async (req, res) => {
+/**
+ * Cancelar una reserva (ruta protegida - solo admin).
+ * PATCH/PUT: cambia status => "cancelled"
+ */
+app.put("/api/reservations/:id/cancel", requireAdmin, async (req, res) => {
   const id = Number(req.params.id);
   try {
     const updated = await prisma.reservation.update({
@@ -158,7 +196,9 @@ app.put("/api/reservations/:id/cancel", async (req, res) => {
 /** -------- Listen -------- */
 const PORT = process.env.PORT || 3001;
 if (process.env.NODE_ENV !== "test") {
-  app.listen(PORT, () => console.log(`API listening on http://localhost:${PORT}`));
+  app.listen(PORT, () => {
+    console.log(`API listening on http://localhost:${PORT}`);
+  });
 }
 
 export { app, prisma };
