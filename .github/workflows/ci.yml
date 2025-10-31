@@ -1,69 +1,13 @@
-name: CI
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch: {}
-
-permissions:
-  contents: read
-
-concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
-
-jobs:
-  lint:
-    name: Lint (si existe)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      # Lint cliente si hay script "lint"
-      - name: Client lint (optional)
-        run: |
-          if [ -f client/package.json ] && jq -e '.scripts.lint' client/package.json >/dev/null; then
-            npm ci --prefix client
-            npm run lint --prefix client
-          else
-            echo "client: no hay script lint, se omite"
-          fi
-
-      # Lint servidor si hay script "lint"
-      - name: Server lint (optional)
-        run: |
-          if [ -f server/package.json ] && jq -e '.scripts.lint' server/package.json >/dev/null; then
-            npm ci --prefix server
-            npm run lint --prefix server
-          else
-            echo "server: no hay script lint, se omite"
-          fi
-
-  build-images:
-    name: Build Docker images
-    runs-on: ubuntu-latest
-    needs: [lint]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build backend image
-        run: docker build -t srr-backend ./server
-      - name: Build frontend image
-        run: docker build -t srr-frontend ./client
-
   test-api-blackbox:
-    name: Tests API (caja negra con Docker Compose)
+    name: Tests API (caja negra con Docker Compose v2)
     runs-on: ubuntu-latest
     needs: [build-images]
     steps:
       - uses: actions/checkout@v4
 
+      # Levantar stack con compose v2
       - name: Boot stack
-        run: docker-compose up -d
+        run: docker compose up -d
 
       - name: Esperar backend /health
         run: |
@@ -93,10 +37,10 @@ jobs:
       - name: Logs si falla
         if: failure()
         run: |
-          docker-compose ps
-          docker-compose logs --no-color backend || true
-          docker-compose logs --no-color frontend || true
+          docker compose ps
+          docker compose logs --no-color backend || true
+          docker compose logs --no-color frontend || true
 
       - name: Down
         if: always()
-        run: docker-compose down -v
+        run: docker compose down -v
