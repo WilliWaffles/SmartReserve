@@ -1,29 +1,27 @@
-import js from '@eslint/js'
-import globals from 'globals'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
-import { defineConfig, globalIgnores } from 'eslint/config'
+// client/eslint.config.js
+import globals from "globals";
+import pluginReact from "eslint-plugin-react";
 
-export default defineConfig([
-  globalIgnores(['dist']),
+export default [
+  { ignores: ["dist/**", "node_modules/**"] },
   {
-    files: ['**/*.{js,jsx}'],
-    extends: [
-      js.configs.recommended,
-      reactHooks.configs['recommended-latest'],
-      reactRefresh.configs.vite,
-    ],
+    files: ["src/**/*.{js,jsx}"],
     languageOptions: {
-      ecmaVersion: 2020,
-      globals: globals.browser,
-      parserOptions: {
-        ecmaVersion: 'latest',
-        ecmaFeatures: { jsx: true },
-        sourceType: 'module',
+      ecmaVersion: 2022,
+      sourceType: "module",
+      globals: {
+        ...globals.browser,
       },
     },
+    plugins: {
+      react: pluginReact,
+    },
     rules: {
-      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      "react/react-in-jsx-scope": "off", // Vite/React 17+
+      "react/jsx-uses-react": "off",
+    },
+    settings: {
+      react: { version: "detect" },
     },
   },
-])
+];
