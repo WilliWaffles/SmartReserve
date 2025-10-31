@@ -9,6 +9,12 @@ export default [
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "module",
+      // 👇 Habilita JSX para que no marque "Unexpected token <"
+      parserOptions: {
+        ecmaVersion: 2022,
+        sourceType: "module",
+        ecmaFeatures: { jsx: true },
+      },
       globals: {
         ...globals.browser,
       },
@@ -17,7 +23,7 @@ export default [
       react: pluginReact,
     },
     rules: {
-      "react/react-in-jsx-scope": "off", // Vite/React 17+
+      "react/react-in-jsx-scope": "off", // React 17+ / Vite
       "react/jsx-uses-react": "off",
     },
     settings: {
