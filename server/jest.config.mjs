@@ -1,16 +1,19 @@
+// server/jest.config.mjs
 export default {
   testEnvironment: "node",
-  transform: {},              // sin Babel, puro ESM/Node 20
+  // Trata .mjs como módulos ESM
+  extensionsToTreatAsEsm: [".mjs"],
+  transform: {}, // sin Babel ni ts-jest
   verbose: true,
   testMatch: ["**/tests/**/*.test.mjs"],
-  // Si necesitas más tiempo porque Docker tarda en responder:
-  testTimeout: 20000,
+  // Cobertura
   collectCoverage: true,
   collectCoverageFrom: ["index.js", "adminAuth.js"],
   coverageDirectory: "coverage",
   coverageReporters: ["text-summary", "lcov"],
-  // Umbrales mínimos
   coverageThreshold: {
     global: { statements: 70, branches: 60, functions: 70, lines: 70 }
-  }
+  },
+  // Evita que Jest intente resolver CJS de forma rara
+  moduleFileExtensions: ["mjs", "js", "cjs", "json"]
 };

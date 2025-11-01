@@ -8,7 +8,7 @@
     "prisma:generate": "prisma generate",
     "test": "npm run test:api",
     "lint": "eslint .",
-    "test:api": "cross-env BASE_URL=http://localhost:3001 NODE_ENV=test jest --runInBand --passWithNoTests",
+    "test:api": "cross-env BASE_URL=http://localhost:3001 NODE_ENV=test node --experimental-vm-modules ./node_modules/jest/bin/jest.js --runInBand --passWithNoTests",
     "test:api:watch": "cross-env BASE_URL=http://localhost:3001 NODE_ENV=test jest --watch"
   },
   "dependencies": {
